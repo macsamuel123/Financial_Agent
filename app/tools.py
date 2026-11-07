@@ -93,3 +93,16 @@ def get_member_accounts(connection, member_id):
                 "balance": balance,
             })
         return results
+
+def list_members(connection):
+    with connection.cursor() as cursor:
+        cursor.execute("""
+        SELECT member_id, first_name FROM
+        members 
+        ORDER BY member_id
+        """)
+    rows = cursor.fetchall()
+    results =[]
+    for member_id, first_name in rows:
+        results.append({"member id":member_id,"first name":first_name})
+    return results

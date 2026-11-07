@@ -14,7 +14,7 @@ def make_result(question, category=None, answer=None, citations=None,
 saved_chunks = load_store(STORE_PATH)
 matrix = build_matrix(saved_chunks)
 
-def orchestrate(question):
+def orchestrate(question, member_id=None):
     # 1. Guardrail, and stop immediately if it failed
     classification = check_financial_advice(question)
     if classification is None:
@@ -56,3 +56,5 @@ def orchestrate(question):
                        answer=answer["answer"], citations=answer["citations"],
                        verified=verification["verified"], grade=grade,
                        needs_review=needs_review)
+
+
