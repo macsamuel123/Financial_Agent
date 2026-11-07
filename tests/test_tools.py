@@ -2,7 +2,16 @@ import pytest
 from app.db import get_connection
 from app.tools import calculate_tfsa_room
 from script.seed import MEMBERS
+from app.tools import calculate_tfsa_room, get_member_accounts
 
+
+def test_member_accounts(conn):
+    member_id = get_member_id(conn, "Priya")
+    accounts = get_member_accounts(conn, member_id)
+
+    assert len(accounts) == 1
+    assert accounts[0]["account_type"] == "TFSA"
+    assert accounts[0]["product_name"] == "Northpine TFSA High-Interest Savings"
 
 @pytest.fixture
 def conn():

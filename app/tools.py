@@ -1,4 +1,5 @@
 from app.db import get_connection
+import json
 
 def calculate_tfsa_room(connection, member_id, year=2025):
     """Return a member's TFSA contribution room for the given year.
@@ -67,3 +68,28 @@ def calculate_tfsa_room(connection, member_id, year=2025):
 
          # 6. The formula
         return total_limits - contributions + withdrawals_restored
+
+
+def get_member_accounts(connection, member_id):
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT a.account_id, a.account_type, p.name, p.interest_rate,
+            p.monthly_fee, a.opened_on, a.balance
+            FROM accounts a
+            JOIN product_catalog p ON p.product_id = a.product_id
+            WHERE a.member_id = %s
+            ORDER BY a.opened_on """,(member_id,))
+
+        rows = cursor.fetchall()
+        results=[]
+        for account_id, account_type, name, rate, fee, opened_on, balance in rows:
+            results.append({
+                "account_id": account_id,
+                "account_type": account_type,
+                "product_name": name,
+                "interest_rate": rate,
+                "monthly_fee": fee,
+                "opened_on": opened_on,
+                "balance": balance,
+            })
+        return results
