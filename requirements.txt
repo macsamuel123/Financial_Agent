@@ -8,3 +8,9 @@ uvicorn
 streamlit
 psycopg[binary]
 pytest
+mcp<2
+psycopg2-binary
+python-dotenv
+langgraph
+langchain-openai
+langchain-mcp-adapters

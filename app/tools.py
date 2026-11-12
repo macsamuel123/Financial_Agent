@@ -101,8 +101,5 @@ def list_members(connection):
         members 
         ORDER BY member_id
         """)
-    rows = cursor.fetchall()
-    results =[]
-    for member_id, first_name in rows:
-        results.append({"member id":member_id,"first name":first_name})
-    return results
+        rows = cursor.fetchall()
+    return [{"member_id": member_id, "first_name": first_name} for member_id, first_name in rows]
