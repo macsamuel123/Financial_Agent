@@ -1,4 +1,4 @@
-# TFSA Guardrailed RAG Assistant
+# Financial Agent
 
 A full-stack question-answering assistant for Canada's Tax-Free Savings Account (TFSA), built on the CRA's official guide. It refuses risky investment advice, answers only from the source document, backs every claim with an exact quote, and flags anything it isn't sure about for human review.
 
