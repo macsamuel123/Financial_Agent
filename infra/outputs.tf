@@ -3,7 +3,6 @@ output "ecs_cluster_name" {
   description = "The name of the ECS cluster"
 }
 
-output "vpc_id`" {
-  value       = aws_vpc.main.id
-  description = "The ID of the provisioned VPC"
+output "vpc_id" {
+  value = aws_vpc.main.id
 }

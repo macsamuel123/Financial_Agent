@@ -15,8 +15,8 @@ variable "openai_api_key" {
   description = "OpenAI API key for the LangGraph agent"
 }
 
-variable "database_url`" {
-  type        = string
+variable "database_url" {
+  type = string
   sensitive   = true
   description = "Neon Postgres connection string"
 }
