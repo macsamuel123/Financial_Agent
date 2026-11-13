@@ -20,3 +20,9 @@ variable "database_url" {
   sensitive   = true
   description = "Neon Postgres connection string"
 }
+
+variable "desired_count" {
+  description = "Number of API tasks to run (0 to stop, 1 to run)"
+  type        = number
+  default     = 1
+}

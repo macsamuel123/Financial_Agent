@@ -54,6 +54,14 @@ resource "aws_security_group" "ecs_sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+    ingress {
+    description = "API"
+    from_port   = 8000
+    to_port     = 8000
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 }
 
 # 2. IAM Roles for ECS Execution
@@ -112,6 +120,16 @@ resource "aws_ecs_task_definition" "task" {
       name      = "agent-mcp"
       image     = var.container_image
       essential = true
+            portMappings = [
+        { containerPort = 8000, protocol = "tcp" }
+      ]
+      healthCheck = {
+        command     = ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health')\" || exit 1"]
+        interval    = 30
+        timeout     = 5
+        retries     = 3
+        startPeriod = 60
+      }
             secrets = [
         { name = "OPENAI_API_KEY",   valueFrom = "${local.ssm_prefix}/OPENAI_API_KEY" },
         { name = "DEEPSEEK_API_KEY", valueFrom = "${local.ssm_prefix}/DEEPSEEK_API_KEY" },
@@ -136,4 +154,21 @@ terraform {
     region       = "us-east-1"
     use_lockfile = true
   }
+}
+
+resource "aws_ecs_service" "api" {
+  name            = "financial-agent-api"
+  cluster         = aws_ecs_cluster.cluster.id
+  task_definition = aws_ecs_task_definition.task.arn
+  desired_count   = var.desired_count
+  launch_type     = "FARGATE"
+
+  network_configuration {
+    subnets          = [aws_subnet.public.id]
+    security_groups  = [aws_security_group.ecs_sg.id]
+    assign_public_ip = true
+  }
+
+  deployment_minimum_healthy_percent = 0
+  deployment_maximum_percent         = 100
 }
