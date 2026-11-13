@@ -5,7 +5,7 @@ from langchain_openai import OpenAIEmbeddings
 MODEL = "deepseek-v4-pro"
 SCORE_THRESHOLD = 0.55
 PDF_PATH="/workspaces/TFSA-Guardrailed-RAG-Assistant/data/CRA_TFSA-Guide.pdf"
-STORE_PATH="/workspaces/TFSA-Guardrailed-RAG-Assistant/data/tfsa_store.json"
+STORE_PATH="data/tfsa_store.json"
 deepseek_api_key=os.getenv('DEEPSEEK_API_KEY')
 if not deepseek_api_key:
     raise RuntimeError("DEEPSEEK_API_KEY is not set")
