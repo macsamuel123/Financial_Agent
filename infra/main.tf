@@ -2,6 +2,12 @@ provider "aws" {
   region = var.aws_region
 }
 
+data "aws_caller_identity" "current" {}
+
+locals {
+  ssm_prefix = "arn:aws:ssm:${var.aws_region}:${data.aws_caller_identity.current.account_id}:parameter/financial-agent"
+} 
+
 # 1. Networking (VPC & Subnets for ECS Fargate)
 resource "aws_vpc" "main" {
   cidr_block           = "10.0.0.0/16"
@@ -69,6 +75,25 @@ resource "aws_iam_role_policy_attachment" "ecs_execution_policy" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
+resource "aws_iam_role_policy" "ecs_read_ssm" {
+  name = "financial-agent-read-ssm"
+  role = aws_iam_role.ecs_execution_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = ["ssm:GetParameters"]
+      Resource = "${local.ssm_prefix}/*"
+    }]
+  })
+}
+
+resource "aws_cloudwatch_log_group" "agent" {
+  name              = "/ecs/financial-agent"
+  retention_in_days = 7
+}
+
 # 3. ECS Cluster & Fargate Task Definition
 resource "aws_ecs_cluster" "cluster" {
   name = "financial-agent-cluster"
@@ -87,19 +112,28 @@ resource "aws_ecs_task_definition" "task" {
       name      = "agent-mcp"
       image     = var.container_image
       essential = true
-      environment = [
-        { name = "OPENAI_API_KEY", value = var.openai_api_key },
-        { name = "DATABASE_URL", value = var.database_url }
+            secrets = [
+        { name = "OPENAI_API_KEY",   valueFrom = "${local.ssm_prefix}/OPENAI_API_KEY" },
+        { name = "DEEPSEEK_API_KEY", valueFrom = "${local.ssm_prefix}/DEEPSEEK_API_KEY" },
+        { name = "DATABASE_URL",     valueFrom = "${local.ssm_prefix}/DATABASE_URL" }
       ]
       logConfiguration = {
         logDriver = "awslogs"
         options = {
-          "awslogs-group"         = "/ecs/financial-agent"
+          "awslogs-group"         = aws_cloudwatch_log_group.agent.name
           "awslogs-region"        = var.aws_region
           "awslogs-stream-prefix" = "agent"
-          "awslogs-create-group"  = "true"
         }
       }
     }
   ])
+}
+
+terraform {
+  backend "s3" {
+    bucket       = "financial-agent-tfstate-fms"
+    key          = "financial-agent/terraform.tfstate"
+    region       = "us-east-1"
+    use_lockfile = true
+  }
 }
